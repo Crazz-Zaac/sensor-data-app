@@ -28,6 +28,10 @@ class ActivityService {
   Activity? get currentActivity => _currentActivity;
   bool get isActivityRunning => _activityTimer != null;
 
+  List<Activity> _activitySequence = [];
+  int _currentActivityIndex = -1;
+  Timer? _preparationTimer;
+
   int _remainingSeconds = 0;
   int get remainingSeconds => _remainingSeconds;
 
@@ -105,12 +109,62 @@ class ActivityService {
     }
   }
 
+  // Add this method to start a sequence of activities
+  void startActivitySequence(List<String> activityIds) {
+    stopActivity();
+    _activitySequence = activityIds.map((id) => getActivityById(id)).whereType<Activity>().toList();
+    _currentActivityIndex = -1;
+    _startNextActivity();
+  }
+
+  void _startNextActivity() {
+    _currentActivityIndex++;
+    if (_currentActivityIndex >= _activitySequence.length) {
+      // All activities completed
+      _notificationController.add('All activities completed');
+      return;
+    }
+
+    final nextActivity = _activitySequence[_currentActivityIndex];
+    final preparationTime = 10; // seconds to prepare for next activity
+
+    // Notify about upcoming activity
+    _notificationController.add('Prepare for ${nextActivity.name} in $preparationTime seconds');
+    
+    // Set up preparation timer
+    _preparationTimer = Timer(Duration(seconds: preparationTime), () {
+      _startActivity(nextActivity);
+    });
+  }
+
+  void _startActivity(Activity activity) {
+    _currentActivity = activity;
+    _remainingSeconds = activity.durationInSeconds;
+    
+    _currentActivityController.add(_currentActivity);
+    _notificationController.add('Activity "${activity.name}" started');
+
+    // Set up activity timer
+    _activityTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _remainingSeconds--;
+      _remainingTimeController.add(_remainingSeconds);
+
+      if (_remainingSeconds <= 0) {
+        _notificationController.add('Activity "${activity.name}" completed');
+        timer.cancel();
+        _startNextActivity();
+      }
+    });
+  }
+
   void startActivity(String activityId) {
     final activity = getActivityById(activityId);
     if (activity == null) return;
 
     // Stop any current activity
     stopActivity();
+
+    _startActivity(activity);
 
     _currentActivity = activity;
     _remainingSeconds = activity.durationInSeconds;

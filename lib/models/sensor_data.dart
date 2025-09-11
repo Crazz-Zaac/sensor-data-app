@@ -29,7 +29,6 @@ class SensorData {
   List<dynamic> toCsvRow() {
     return [
       timestamp.millisecondsSinceEpoch,
-      sensorType,
       x,
       y,
       z,
@@ -39,8 +38,7 @@ class SensorData {
 
   static List<String> getCsvHeaders() {
     return [
-      'timestamp',
-      'sensor_type',
+      'timestamp_ms',
       'x',
       'y',
       'z',

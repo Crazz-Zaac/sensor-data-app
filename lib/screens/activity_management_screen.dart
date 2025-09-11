@@ -106,10 +106,45 @@ class _ActivityManagementScreenState extends State<ActivityManagementScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNewActivity,
-        tooltip: 'Add Activity',
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'addActivity',
+            onPressed: _addNewActivity,
+            tooltip: 'Add Activity',
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: 'startSequence',
+            onPressed: _startActivitySequence,
+            tooltip: 'Start Sequence',
+            child: const Icon(Icons.play_arrow),
+          ),
+        ],
+      ),
+
+    );
+  }
+
+  void _startActivitySequence() {
+    final activityIds = _activityService.activities.map((a) => a.id).toList();
+
+    if (activityIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No activities in sequence')),
+      );
+      return;
+    }
+
+    _activityService.startActivitySequence(activityIds);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Starting activity sequence'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
