@@ -1,9 +1,9 @@
 name: Flutter Android Build
 
 on:
-  workflow_dispatch:   # run manually
+  workflow_dispatch:
   push:
-    branches: [ master ] # also run on push to main
+    branches: [ master ]
 
 jobs:
   build:
@@ -26,6 +26,13 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Fix Kotlin version (temporary fix)
+        run: |
+          cd android
+          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.10"/' build.gradle
+          # If using plugins block in settings.gradle
+          sed -i 's/id .org.jetbrains.kotlin.android. version .*/id "org.jetbrains.kotlin.android" version "1.9.10"/' settings.gradle || true
 
       - name: Build APK
         run: flutter build apk --debug
