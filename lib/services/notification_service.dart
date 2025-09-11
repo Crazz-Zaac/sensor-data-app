@@ -119,25 +119,32 @@ class NotificationService {
   }
 
   // Predefined notification methods
-  Future<void> notifyActivityStarting(String activityName, int minutesRemaining) async {
-    final message = minutesRemaining == 1 
-        ? 'Activity $activityName starting in 1 minute'
-        : 'Activity $activityName starting in $minutesRemaining minutes';
+  Future<void> notifyActivityStarting(String activityName, int secondsRemaining) async {
+    final minutes = secondsRemaining ~/ 60;
+    final String message;
+    
+    if (minutes == 1) {
+      message = 'Prepare for $activityName in 1 minute';
+    } else if (minutes > 1) {
+      message = 'Prepare for $activityName in $minutes minutes';
+    } else {
+      message = 'Prepare for $activityName in $secondsRemaining seconds';
+    }
     
     await playNotificationSound();
     await speakText(message);
   }
 
   Future<void> notifyActivityStarted(String activityName) async {
-    const message = 'Activity started';
+    final message = '$activityName activity started';
     await playAlertSound();
-    await speakText('$message: $activityName');
+    await speakText(message);
   }
 
   Future<void> notifyActivityCompleted(String activityName) async {
-    const message = 'Activity completed';
+    final message = '$activityName activity completed';
     await playAlertSound();
-    await speakText('$message: $activityName');
+    await speakText(message);
   }
 
   Future<void> notifyActivityStopped(String activityName) async {

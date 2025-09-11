@@ -109,16 +109,27 @@ class ActivityService {
     }
   }
 
+  void setActivitySequence(List<Activity> activities) {
+    _activitySequence = List.from(activities);
+    _currentActivityIndex = -1;
+  }
+
   // Add this method to start a sequence of activities
   void startActivitySequence(List<String> activityIds) {
+    if (_activitySequence.isEmpty) {
+      _notificationController.add('No activities in sequence');
+      return;
+    }
+
     stopActivity();
-    _activitySequence = activityIds.map((id) => getActivityById(id)).whereType<Activity>().toList();
+    // _activitySequence = activityIds.map((id) => getActivityById(id)).whereType<Activity>().toList();
     _currentActivityIndex = -1;
     _startNextActivity();
   }
 
   void _startNextActivity() {
     _currentActivityIndex++;
+    
     if (_currentActivityIndex >= _activitySequence.length) {
       // All activities completed
       _notificationController.add('All activities completed');
@@ -126,10 +137,10 @@ class ActivityService {
     }
 
     final nextActivity = _activitySequence[_currentActivityIndex];
-    final preparationTime = 10; // seconds to prepare for next activity
-
+    final preparationTime = 60; // 60 seconds preparation time
+    
     // Notify about upcoming activity
-    _notificationController.add('Prepare for ${nextActivity.name} in $preparationTime seconds');
+    _notificationController.add('Prepare for ${nextActivity.name} in 1 minute');
     
     // Set up preparation timer
     _preparationTimer = Timer(Duration(seconds: preparationTime), () {
@@ -142,6 +153,7 @@ class ActivityService {
     _remainingSeconds = activity.durationInSeconds;
     
     _currentActivityController.add(_currentActivity);
+    _remainingTimeController.add(_remainingSeconds);
     _notificationController.add('Activity "${activity.name}" started');
 
     // Set up activity timer
@@ -157,38 +169,14 @@ class ActivityService {
     });
   }
 
+  // Modify the existing startActivity method to use the new system
   void startActivity(String activityId) {
     final activity = getActivityById(activityId);
     if (activity == null) return;
 
-    // Stop any current activity
-    stopActivity();
-
-    _startActivity(activity);
-
-    _currentActivity = activity;
-    _remainingSeconds = activity.durationInSeconds;
-    
-    // Set up reminder timer (1 minute before start)
-    if (activity.durationInSeconds > 60) {
-      _reminderTimer = Timer(Duration(seconds: activity.durationInSeconds - 60), () {
-        _notificationController.add('Activity "${activity.name}" starting in 1 minute');
-      });
-    }
-
-    // Set up activity timer
-    _activityTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _remainingSeconds--;
-      _remainingTimeController.add(_remainingSeconds);
-
-      if (_remainingSeconds <= 0) {
-        _notificationController.add('Activity "${activity.name}" completed');
-        stopActivity();
-      }
-    });
-
-    _currentActivityController.add(_currentActivity);
-    _notificationController.add('Activity "${activity.name}" started');
+    // Create a sequence with just this activity
+    setActivitySequence([activity]);
+    startActivitySequence([activityId]);
   }
 
   void stopActivity() {

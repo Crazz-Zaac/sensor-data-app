@@ -29,68 +29,30 @@ class DataStorageService {
 
     // Generate filename if not provided
     filename ??= 'sensor_data_${DateTime.now().millisecondsSinceEpoch}.csv';
-
-    // Get the documents directory
-    final directory = await getApplicationDocumentsDirectory();
+    
+    // Get the downloads directory (publicly accessible)
+    final directory = await getDownloadsDirectory();
+    if (directory == null) {
+      throw Exception('Cannot access downloads directory');
+    }
+    
     final filePath = '${directory.path}/$filename';
 
-    // Group data by sensor type
-    final sensorDataMap = <String, List<SensorData>>{};
+    // Prepare CSV data
+    final List<List<dynamic>> csvData = [];
+    
+    // Add headers
+    csvData.add(SensorData.getCsvHeaders());
+    
+    // Add data rows
     for (final sensorData in _collectedData) {
-      sensorDataMap.putIfAbsent(sensorData.sensorType, () => []);
-      sensorDataMap[sensorData.sensorType]!.add(sensorData);
-    }
-
-    // Create headers: timestamp + activity + sensor columns
-    final headers = ['timestamp_ms', 'activity'];
-    for (final sensorType in sensorDataMap.keys) {
-      headers.add('${sensorType}_x');
-      headers.add('${sensorType}_y');
-      headers.add('${sensorType}_z');
-    }
-
-    final List<List<dynamic>> csvData = [headers];
-
-    // Build a map of timestamp → values
-    final timestampMap = <int, Map<String, dynamic>>{};
-    for (final sensorType in sensorDataMap.keys) {
-      for (final data in sensorDataMap[sensorType]!) {
-        final timestamp = data.timestamp.millisecondsSinceEpoch;
-        timestampMap.putIfAbsent(timestamp, () => {
-              'timestamp': timestamp,
-              'activity': data.activity,
-            });
-
-        timestampMap[timestamp]!['${sensorType}_x'] = data.x;
-        timestampMap[timestamp]!['${sensorType}_y'] = data.y;
-        timestampMap[timestamp]!['${sensorType}_z'] = data.z;
-      }
-    }
-
-    // Sort timestamps for time series consistency
-    final sortedTimestamps = timestampMap.keys.toList()..sort();
-
-    // Create rows
-    for (final timestamp in sortedTimestamps) {
-      final rowData = timestampMap[timestamp]!;
-      final row = [
-        rowData['timestamp'],
-        rowData['activity'],
-      ];
-
-      for (final sensorType in sensorDataMap.keys) {
-        row.add(rowData['${sensorType}_x'] ?? '');
-        row.add(rowData['${sensorType}_y'] ?? '');
-        row.add(rowData['${sensorType}_z'] ?? '');
-      }
-
-      csvData.add(row);
+      csvData.add(sensorData.toCsvRow());
     }
 
     // Convert to CSV string
     final csvString = const ListToCsvConverter().convert(csvData);
 
-    // Write file
+    // Write to file
     final file = File(filePath);
     await file.writeAsString(csvString);
 
@@ -106,8 +68,12 @@ class DataStorageService {
     // Generate filename if not provided
     filename ??= 'sensor_data_${DateTime.now().millisecondsSinceEpoch}.json';
     
-    // Get the documents directory
-    final directory = await getApplicationDocumentsDirectory();
+    // Get the downloads directory (publicly accessible)
+    final directory = await getDownloadsDirectory();
+    if (directory == null) {
+      throw Exception('Cannot access downloads directory');
+    }
+    
     final filePath = '${directory.path}/$filename';
 
     // Convert data to JSON

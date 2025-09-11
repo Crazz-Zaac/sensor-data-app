@@ -314,13 +314,20 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     if (_isRecording) {
+      // Use the planned activity sequence
+      _activityService.setActivitySequence(_activityService.activities);
+      _activityService.startActivitySequence(
+        _activityService.activities.map((a) => a.id).toList(),
+      );
       _sensorService.startRecording();
       _notificationService.notifyRecordingStarted();
     } else {
+      _activityService.stopActivity();
       _sensorService.stopRecording();
       _notificationService.notifyRecordingStopped();
     }
   }
+
 
   void _stopActivity() {
     _activityService.stopActivity();
