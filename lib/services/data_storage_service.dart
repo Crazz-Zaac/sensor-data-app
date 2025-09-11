@@ -129,7 +129,7 @@ class DataStorageService {
       final directory = await getApplicationDocumentsDirectory();
       final files = directory.listSync()
           .whereType<File>()
-          .map((entity) => entity)
+          .map((entity) => entity as File)
           .where((file) => file.path.endsWith('.csv') || file.path.endsWith('.json'))
           .map((file) => file.path)
           .toList();
