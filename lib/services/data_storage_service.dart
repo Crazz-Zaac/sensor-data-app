@@ -79,17 +79,19 @@ class DataStorageService {
   }
 
   Map<String, dynamic> getDataStatistics() {
-    if (_collectedData.isEmpty) {
-      return {
-        'total_records': 0,
-        'sensors': {},
-        'activities': {},
-        'duration_seconds': 0,
-      };
-    }
+   if (_collectedData.isEmpty) {
+    return {
+      'total_records': 0,
+      'sensors': <String, int>{},
+      'activities': <String, int>{},
+      'duration_seconds': 0,
+      'first_timestamp': null,
+      'last_timestamp': null,
+    };
+  }
 
-    final sensorCounts = <String, int>{};
-    final activityCounts = <String, int>{};
+  final sensorCounts = <String, int>{};
+  final activityCounts = <String, int>{};
     
     DateTime? firstTimestamp;
     DateTime? lastTimestamp;

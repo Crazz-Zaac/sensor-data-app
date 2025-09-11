@@ -79,10 +79,18 @@ class _DataExportScreenState extends State<DataExportScreen> {
       );
     }
 
-    final totalRecords = _statistics!['total_records'] as int;
-    final sensors = _statistics!['sensors'] as Map<String, dynamic>;
-    final activities = _statistics!['activities'] as Map<String, dynamic>;
-    final durationSeconds = _statistics!['duration_seconds'] as int;
+    final totalRecords = _statistics!['total_records'] as int? ?? 0;
+    final sensorsMap = _statistics!['sensors'] as Map? ?? {};
+    final activitiesMap = _statistics!['activities'] as Map? ?? {};
+    final durationSeconds = _statistics!['duration_seconds'] as int? ?? 0;
+
+    // Convert to String-keyed maps with proper values
+    final sensors = sensorsMap.map((key, value) => 
+      MapEntry(key.toString(), value.toString())
+    );
+    final activities = activitiesMap.map((key, value) => 
+      MapEntry(key.toString(), value.toString())
+    );
 
     return Card(
       child: Padding(
