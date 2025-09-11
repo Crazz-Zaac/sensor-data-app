@@ -24,15 +24,16 @@ jobs:
           flutter-version: "3.24.3"
           channel: stable
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Fix Kotlin version (temporary fix)
+      - name: Fix Kotlin version in build.gradle
         run: |
           cd android
-          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.10"/' build.gradle
-          # If using plugins block in settings.gradle
-          sed -i 's/id .org.jetbrains.kotlin.android. version .*/id "org.jetbrains.kotlin.android" version "1.9.10"/' settings.gradle || true
+          # Update Kotlin version in build.gradle
+          sed -i 's/ext.kotlin_version = [^ ]*/ext.kotlin_version = "1.9.10"/' build.gradle
+          # Remove any Kotlin plugin from settings.gradle (if present)
+          sed -i '/org.jetbrains.kotlin.android/d' settings.gradle
+
+      - name: Install dependencies
+        run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --debug
